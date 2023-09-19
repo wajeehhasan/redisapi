@@ -17,10 +17,14 @@ namespace DATA.Services
         }
         public async Task<GenericResultSet<LocationData>> GetIpDetailsAsync(string ip_address)
         {
-          
+            //getting redis configuration from appsettings
+            var enableRedis = bool.Parse(_config.GetSection("RedisConfiguration:UseRedis").Value);
+            var cacheExpiry = double.Parse(_config.GetSection("RedisConfiguration:CacheExpiry").Value);
+
             GenericResultSet<LocationData> response = new();
-            var expirationTime = DateTimeOffset.Now.AddMinutes(5.0); //setting expiry time for redis key
-            if (bool.Parse(_config.GetSection("UseRedis").Value)) //redis will be used only if set true in application settings
+            var expirationTime = DateTimeOffset.Now.AddMinutes(cacheExpiry); //setting expiry time for redis key
+
+            if (enableRedis) //redis will be used only if set true in application settings
             {
                 var redis_returned_obj = _redisOperations.GetData<LocationData>(ip_address);
                 if (redis_returned_obj != null)
